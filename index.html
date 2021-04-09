@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="css/uikit.min.css">
+</head>
+
+<body>
+
+	<div class="uk-container uk-container-xsmall uk-margin-top">
+		
+		<div>
+			<form id="fd">
+				<label>Ваше имя</label>
+				<input name="author" id="msgAuthor" type="text" class="uk-input">
+				<label>Текст сообщения</label>
+				<textarea name="text" id="msgText" rows="5" class="uk-textarea"></textarea>
+			</form>
+			<button id="sendBtn" class="uk-button uk-button-primary uk-margin-small-top uk-width-1-1">Отправить сообщение</button>
+		
+		</div>
+		
+		<hr>
+
+		<div id="messages">
+		</div>
+
+	</div>
+
+	<script src="js/uikit.min.js"></script>
+	<script src="js/uikit-icons.min.js"></script>
+	
+	<script>
+		'use strict';
+		let xhrGet = new XMLHttpRequest();
+
+        let xhrSend = new XMLHttpRequest();
+
+        // === Отправка сообщения ===
+
+        sendBtn.addEventListener('click', function(){
+			let f = new FormData(fd);
+        	
+            xhrSend.open("post", "http://37.77.104.246/api/chat/sendmessage.php", true);
+
+            xhrSend.send(f);
+
+        });
+
+        
+
+        // === Обновление сообщений ===
+
+        let msgUpdInterval = setInterval(function(){
+
+        	xhrGet.open("get", "http://37.77.104.246/api/chat/getmessages.php", true);
+
+            xhrGet.send();
+
+        }, 500);
+
+        
+
+        xhrGet.addEventListener('readystatechange', function(){
+
+                // Проверяем, что запрос завершен
+
+                if(xhrGet.readyState == 4){
+
+                    // проверяем, что статус 200 OK, т.е. запрос прошел нормально 
+
+                    if(xhrGet.status == 200){
+
+                        let points = JSON.parse(xhrGet.responseText);
+
+                        // очищаем список сообщений
+
+                        messages.innerHTML = '';
+
+                        for(let point of points) {
+
+                            renderMessage(point.author, point.datetime, point.text);
+
+                        }
+
+                    }
+
+                }
+
+            })
+		// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==============================================================
+		
+		// Вывести сообщение
+		function renderMessage(author, datetime, text){
+			// Формируем верхнюю часть (автор, дата и время)
+			let header = document.createElement('h3');
+			header.classList.add('uk-card-title');
+			header.innerHTML = author + ' ';
+			
+			let dt = document.createElement('small');
+			dt.innerHTML = '['+datetime+']';
+			
+			header.appendChild(dt);
+			
+			// формируем основную часть сообщения 
+			let txt = document.createElement('p');
+			txt.innerHTML = text;
+			
+			// оборачиваем все в карточку
+			let card = document.createElement('div');
+			card.classList = 'uk-card uk-card-default uk-card-body uk-margin-bottom';
+			card.appendChild(header);
+			card.appendChild(txt);
+			
+			//выводим сообщение
+			messages.appendChild(card);
+		}
+	</script>
+</body></html>
